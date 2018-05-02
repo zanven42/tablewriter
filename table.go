@@ -14,6 +14,8 @@ import (
 	"io"
 	"regexp"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 const (
@@ -79,6 +81,8 @@ type Table struct {
 	columnsParams  []string
 	footerParams   []string
 	columnsAlign   []int
+	rowColor       *color.Color
+	userowColor    bool
 }
 
 // Start New Table
@@ -274,6 +278,14 @@ func (t *Table) SetBorders(border Border) {
 	t.borders = border
 }
 
+// AppendWithColor adds a color to the cell strings with the color passed in
+func (t *Table) AppendWithColor(row []string, Color *color.Color) {
+	t.userowColor = true
+	t.rowColor = Color
+	t.Append(row)
+	t.userowColor = false
+}
+
 // Append row to table
 func (t *Table) Append(row []string) {
 	rowSize := len(t.headers)
@@ -289,7 +301,12 @@ func (t *Table) Append(row []string) {
 		// Detect String height
 		// Break strings into words
 		out := t.parseDimension(v, i, n)
-
+		// if coloring, set each line in cell to use color
+		if t.userowColor && t.rowColor != nil {
+			for k, l := range out {
+				out[k] = t.rowColor.Sprint(l)
+			}
+		}
 		// Append broken words
 		line = append(line, out)
 	}
